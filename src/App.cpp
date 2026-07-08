@@ -92,7 +92,6 @@ void App::pickPhysicalDevice() {
     std::priority_queue<std::pair<uint32_t, vk::raii::PhysicalDevice>> candidates;
     for (const auto &physicalDevice : physicalDevices) {
         auto deviceProperties{physicalDevice.getProperties()};
-        auto deviceFeatures  {physicalDevice.getFeatures()};
         uint32_t score       {0};
 
         // Rank based on GPU type. dGPUs are/should be better than iGPUs, which is the reason for the scoring
