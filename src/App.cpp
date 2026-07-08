@@ -39,6 +39,7 @@ void App::initWindow() {
 /* Vulkan */
 void App::initVulkan() {
     createInstance();
+    pickPhysicalDevice();
 }
 
 void App::createInstance() {
@@ -76,6 +77,22 @@ void App::createInstance() {
     };
 
     m_instance = vk::raii::Instance(m_context, createInfo);
+}
+
+void App::pickPhysicalDevice() {
+    auto physicalDevices{m_instance.enumeratePhysicalDevices()};
+    if (physicalDevices.empty()) {
+        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+    }
+
+    for (const auto &physicalDevice : physicalDevices) {
+        auto deviceProperties{physicalDevice.getProperties()};
+        if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
+            m_physicalDevice = physicalDevice;
+            std::println("Selected GPU: {}", physicalDevice.getProperties().deviceName.data());
+            break;
+        }
+    }
 }
 
 /* Render Loop */
