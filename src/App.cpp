@@ -2,6 +2,9 @@
 #include "App.h"
 #include <ranges>
 #include <print>
+#include <queue>
+#include <utility>  // for std::pair
+#include <stdexcept>
 
 // Vulkan
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -55,7 +58,7 @@ void App::createInstance() {
     auto glfwExtensions        {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
     auto extensionProperties   {m_context.enumerateInstanceExtensionProperties()};
 
-    // Check if all extensions are supported by Vulkan implementation
+    // Check if all extensions are supported by Vulkan implementation. Note: GLFW doesn't support range-based for loops
     for (uint32_t i : std::views::iota(0u, glfwExtensionCount)) {
         std::string currExtension {glfwExtensions[i]};
         bool containsCurrExtension{false};
@@ -86,21 +89,97 @@ void App::pickPhysicalDevice() {
         throw std::runtime_error("Failed to find GPUs with Vulkan support!");
     }
 
-    bool foundGPU{false};
+    std::priority_queue<std::pair<uint32_t, vk::raii::PhysicalDevice>> candidates;
     for (const auto &physicalDevice : physicalDevices) {
         auto deviceProperties{physicalDevice.getProperties()};
-        if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
-            m_physicalDevice = physicalDevice;
-            foundGPU = true;
-            break;
+        auto deviceFeatures  {physicalDevice.getFeatures()};
+        uint32_t score       {0};
+
+        // Rank based on GPU type. dGPUs are/should be better than iGPUs, which is the reason for the scoring
+        switch (deviceProperties.deviceType) {
+            case vk::PhysicalDeviceType::eDiscreteGpu:
+                score += 1000;
+                break;
+            case vk::PhysicalDeviceType::eIntegratedGpu:
+                score += 500;
+                break;
+            default:
+                continue;
         }
+
+        // Check if Vulkan 1.4 is supported
+        bool supportsVulkan14{deviceProperties.apiVersion >= vk::ApiVersion14};
+        if (!supportsVulkan14) {
+            continue;
+        }
+        
+        // Check for graphics queue support
+        auto queueFamilies   {physicalDevice.getQueueFamilyProperties()};
+        bool supportsGraphics{false};
+        for (auto queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+                supportsGraphics = true;
+                break;
+            }
+        }
+
+        if (!supportsGraphics) {
+            continue;
+        }
+
+        // Check for extension support
+        std::vector<const char*> requiredDeviceExtensions{
+            vk::KHRSwapchainExtensionName
+        };
+        auto availableDeviceExtensions    {physicalDevice.enumerateDeviceExtensionProperties()};
+        bool supportsAllRequiredExtensions{true};
+        for (const char *requiredExtension : requiredDeviceExtensions) {
+            bool supportsRequiredExtension{false};
+            for (auto deviceExtension : availableDeviceExtensions) {
+                if (strcmp(deviceExtension.extensionName, requiredExtension) == 0) {
+                    supportsRequiredExtension = true;
+                    break;
+                }
+            }
+
+            if (!supportsRequiredExtension) {
+                supportsAllRequiredExtensions = false;
+            }
+        }
+
+        if (!supportsAllRequiredExtensions) {
+            continue;
+        }
+
+        // Check for feature support
+        auto features{physicalDevice.template
+            getFeatures2<vk::PhysicalDeviceFeatures2,
+                        vk::PhysicalDeviceVulkan11Features,
+                        vk::PhysicalDeviceVulkan13Features,
+                        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
+        };
+
+        bool supportsRequiredFeatures{
+            features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+        };
+
+        if (!supportsRequiredFeatures) {
+            continue;
+        }
+
+        // If all requirements are supported, we finally add the device to the queue
+        candidates.push({score, physicalDevice});
     }
 
-    if (!foundGPU) {
-        throw std::runtime_error("Failed to find a dGPU");
+    // Grab top candidate from our priority queue
+    if (!candidates.empty()) {
+        m_physicalDevice = candidates.top().second;
+        std::println("Selected GPU: {}", m_physicalDevice.getProperties().deviceName.data());
+    } else {
+        throw std::runtime_error("Failed to find a dGPU or iGPU with support for features needed");
     }
-
-    std::println("Selected GPU: {}", m_physicalDevice.getProperties().deviceName.data());
 }
 
 /* Render Loop */
@@ -121,4 +200,3 @@ void App::processUserInput() {
 void App::cleanup() {
 
 }
-

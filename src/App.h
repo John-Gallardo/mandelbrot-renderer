@@ -28,10 +28,12 @@ class App {
         void createInstance();
 
         /**
-         * Picks a physical device.
-         * Criteria:
-         * 1. Must support Vulkan
-         * 2. If Vulkan is supported, pick the first dGPU
+         * Picks a physical device, using a priority queue
+         * Criteria to be included:
+         * 1. Must be a dGPU/iGPU
+         * 2. Must support Vulkan 1.4
+         * 3. Must support all required extensions
+         * 4. Must support all required features
          */
         void pickPhysicalDevice();
 
