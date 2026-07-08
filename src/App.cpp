@@ -52,7 +52,8 @@ void App::createInstance() {
 
     // Grab required instance extensions for GLFW
     uint32_t glfwExtensionCount{0};
-    auto glfwExtensions        {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)}; auto extensionProperties   {m_context.enumerateInstanceExtensionProperties()};
+    auto glfwExtensions        {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
+    auto extensionProperties   {m_context.enumerateInstanceExtensionProperties()};
 
     // Check if all extensions are supported by Vulkan implementation
     for (uint32_t i : std::views::iota(0u, glfwExtensionCount)) {
@@ -90,7 +91,6 @@ void App::pickPhysicalDevice() {
         auto deviceProperties{physicalDevice.getProperties()};
         if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
             m_physicalDevice = physicalDevice;
-            std::println("Selected GPU: {}", physicalDevice.getProperties().deviceName.data());
             foundGPU = true;
             break;
         }
@@ -99,6 +99,8 @@ void App::pickPhysicalDevice() {
     if (!foundGPU) {
         throw std::runtime_error("Failed to find a dGPU");
     }
+
+    std::println("Selected GPU: {}", m_physicalDevice.getProperties().deviceName.data());
 }
 
 /* Render Loop */
