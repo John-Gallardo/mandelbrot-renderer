@@ -30,6 +30,10 @@ void App::initWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // we don't want to create an OpenGL context
     m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
+
+    if (m_window == nullptr) {
+        throw std::runtime_error("Failed to create GLFW window");
+    }
 }
 
 /* Vulkan */
@@ -46,13 +50,12 @@ void App::createInstance() {
     };
 
     // Grab required instance extensions for GLFW
-    uint32_t glfwExtensionCount {0};
-    auto glfwExtensions     {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
-    auto extensionProperties{m_context.enumerateInstanceExtensionProperties()};
+    uint32_t glfwExtensionCount{0};
+    auto glfwExtensions        {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)}; auto extensionProperties   {m_context.enumerateInstanceExtensionProperties()};
 
     // Check if all extensions are supported by Vulkan implementation
     for (uint32_t i : std::views::iota(0u, glfwExtensionCount)) {
-        std::string currExtension{glfwExtensions[i]};
+        std::string currExtension {glfwExtensions[i]};
         bool containsCurrExtension{false};
         for (auto extension : extensionProperties) {
             if (currExtension == extension.extensionName) {
@@ -79,6 +82,13 @@ void App::createInstance() {
 void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
+        processUserInput();
+    }
+}
+
+void App::processUserInput() {
+    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(m_window, true);
     }
 }
 

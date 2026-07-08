@@ -17,10 +17,13 @@ class App {
         vk::raii::Context  m_context;
         vk::raii::Instance m_instance{nullptr};
 
+        // Main functions
         void initWindow();
         void initVulkan();
         void mainLoop();
         void cleanup();
 
+        // Helper functions
         void createInstance();
+        void processUserInput();
 };
