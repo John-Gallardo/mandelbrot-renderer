@@ -85,13 +85,19 @@ void App::pickPhysicalDevice() {
         throw std::runtime_error("Failed to find GPUs with Vulkan support!");
     }
 
+    bool foundGPU{false};
     for (const auto &physicalDevice : physicalDevices) {
         auto deviceProperties{physicalDevice.getProperties()};
         if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
             m_physicalDevice = physicalDevice;
             std::println("Selected GPU: {}", physicalDevice.getProperties().deviceName.data());
+            foundGPU = true;
             break;
         }
+    }
+
+    if (!foundGPU) {
+        throw std::runtime_error("Failed to find a dGPU");
     }
 }
 
