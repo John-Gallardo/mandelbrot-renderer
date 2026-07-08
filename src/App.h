@@ -13,11 +13,14 @@ class App {
         void run();
 
     private:
-        GLFWwindow *window{nullptr};
-        vk::raii::Context context;
+        GLFWwindow *m_window         {nullptr};
+        vk::raii::Context  m_context;
+        vk::raii::Instance m_instance{nullptr};
 
         void initWindow();
         void initVulkan();
         void mainLoop();
         void cleanup();
+
+        void createInstance();
 };

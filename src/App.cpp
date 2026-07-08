@@ -1,5 +1,7 @@
 #include "Config.h"
 #include "App.h"
+#include <ranges>
+#include <print>
 
 // Vulkan
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -9,8 +11,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-
-/* Public Functions */
+/********************
+ * Public Functions *
+ ********************/
 void App::run() {
     initWindow();
     initVulkan();
@@ -18,25 +21,69 @@ void App::run() {
     cleanup();
 }
 
-/* Private Functions */
+/*********************
+ * Private Functions *
+ *********************/
+
+/* Window */
 void App::initWindow() {
     glfwInit();
-    // we don't want to set up an OpenGL context
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // we don't want to create an OpenGL context
+    m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
 }
 
-// TODO
+/* Vulkan */
 void App::initVulkan() {
-
+    createInstance();
 }
 
+void App::createInstance() {
+    constexpr vk::ApplicationInfo appInfo{
+        .pApplicationName  {Config::appTitle.data()},
+        .applicationVersion{VK_MAKE_VERSION(1, 0, 0)},
+        .engineVersion     {VK_MAKE_VERSION(1, 0, 0)},
+        .apiVersion        {vk::ApiVersion14}
+    };
+
+    // Grab required instance extensions for GLFW
+    uint32_t glfwExtensionCount {0};
+    auto glfwExtensions     {glfwGetRequiredInstanceExtensions(&glfwExtensionCount)};
+    auto extensionProperties{m_context.enumerateInstanceExtensionProperties()};
+
+    // Check if all extensions are supported by Vulkan implementation
+    for (uint32_t i : std::views::iota(0u, glfwExtensionCount)) {
+        std::string currExtension{glfwExtensions[i]};
+        bool containsCurrExtension{false};
+        for (auto extension : extensionProperties) {
+            if (currExtension == extension.extensionName) {
+                containsCurrExtension = true;
+                break;
+            }
+        }
+
+        if (!containsCurrExtension) {
+            throw std::runtime_error("Required GLFW extension not supported: " + std::string(currExtension));
+        }
+    }
+
+    vk::InstanceCreateInfo createInfo{
+        .pApplicationInfo       {&appInfo},
+        .enabledExtensionCount  {glfwExtensionCount},
+        .ppEnabledExtensionNames{glfwExtensions}
+    };
+
+    m_instance = vk::raii::Instance(m_context, createInfo);
+}
+
+/* Render Loop */
 void App::mainLoop() {
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
     }
 }
 
+/* Cleanup */
 void App::cleanup() {
 
 }
+
