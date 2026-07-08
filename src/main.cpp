@@ -1,11 +1,14 @@
-// Vulkan
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
-#include <vulkan/vulkan_raii.hpp>
-
-// Windowing Library
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "App.h"
+#include <print>
+#include <iostream>  // for std::cerr
 
 int main() {
+    try {
+        App app;
+        app.run();
+    } catch (const std::exception &e) {
+        std::println(std::cerr, "{}", e.what());
+        return -1;
+    }
     return 0;
 }
