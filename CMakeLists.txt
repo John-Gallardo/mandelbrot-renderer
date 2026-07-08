@@ -9,7 +9,7 @@ endif()
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-set(SOURCE main.cpp)
+set(SOURCE src/main.cpp src/App.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
