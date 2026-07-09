@@ -17,6 +17,7 @@ class App {
         vk::raii::Context m_context;
         vk::raii::Instance m_instance            {nullptr};
         vk::raii::PhysicalDevice m_physicalDevice{nullptr};
+        vk::raii::Device device                  {nullptr};
 
         // Main functions
         void initWindow();
@@ -36,6 +37,6 @@ class App {
          * 4. Must support all required features
          */
         void pickPhysicalDevice();
-
         void processUserInput();
+        void createLogicalDevice();
 };

@@ -43,6 +43,7 @@ void App::initWindow() {
 void App::initVulkan() {
     createInstance();
     pickPhysicalDevice();
+    createLogicalDevice();
 }
 
 void App::createInstance() {
@@ -178,6 +179,24 @@ void App::pickPhysicalDevice() {
         std::println("Selected GPU: {}", m_physicalDevice.getProperties().deviceName.data());
     } else {
         throw std::runtime_error("Failed to find a dGPU or iGPU with support for features needed");
+    }
+}
+
+void App::createLogicalDevice() {
+    // grab first queue that supports graphics
+    std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
+    uint32_t graphicsQueueIndex{};
+    bool foundGraphicsQueue{false};
+    for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
+        if (queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) {
+            graphicsQueueIndex = i; 
+            foundGraphicsQueue = true;
+            break;
+        }
+    }
+
+    if (!foundGraphicsQueue) {
+        throw std::runtime_error("Failed to find a queue that supports graphics");
     }
 }
 
