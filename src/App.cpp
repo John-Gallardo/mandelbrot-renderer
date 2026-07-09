@@ -194,25 +194,24 @@ void App::pickPhysicalDevice() {
 }
 
 void App::createLogicalDeviceAndQueue() {
-    // Grab first queue family that supports graphics
+    // Grab first queue family that supports graphics & presentation
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
-    uint32_t graphicsFamilyQueueIndex                           {};
-    bool foundGraphicsQueue                                     {false};
+    uint32_t queueFamilyIndex                                    {0xFFFFFFFF};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
-        if (queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) {
-            graphicsFamilyQueueIndex = i; 
-            foundGraphicsQueue = true;
+        if ((queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) &&
+            m_physicalDevice.getSurfaceSupportKHR(i, *m_surface)) {
+            queueFamilyIndex = i; 
             break;
         }
     }
 
-    if (!foundGraphicsQueue) {
+    if (queueFamilyIndex == 0xFFFFFFFF) {
         throw std::runtime_error("Failed to find a queue that supports graphics");
     }
 
     float queuePriority{1.0f};
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-        .queueFamilyIndex{graphicsFamilyQueueIndex},
+        .queueFamilyIndex{queueFamilyIndex},
         .queueCount      {1},
         .pQueuePriorities{&queuePriority}
     };
@@ -243,7 +242,7 @@ void App::createLogicalDeviceAndQueue() {
     m_device = vk::raii::Device(m_physicalDevice, deviceCreateInfo);
 
     // Retrieve queue handle
-    m_graphicsQueue = vk::raii::Queue(m_device, graphicsFamilyQueueIndex, 0);
+    m_graphicsQueue = vk::raii::Queue(m_device, queueFamilyIndex, 0);
 }
 
 /* Render Loop */
