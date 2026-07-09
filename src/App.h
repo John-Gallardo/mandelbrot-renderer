@@ -17,7 +17,10 @@ class App {
         vk::raii::Context m_context;
         vk::raii::Instance m_instance            {nullptr};
         vk::raii::PhysicalDevice m_physicalDevice{nullptr};
-        vk::raii::Device device                  {nullptr};
+        vk::raii::Device m_device                {nullptr};
+        std::vector<const char*> m_requiredDeviceExtensions{
+            vk::KHRSwapchainExtensionName
+        };
 
         // Main functions
         void initWindow();
