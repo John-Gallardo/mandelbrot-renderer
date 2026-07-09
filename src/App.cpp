@@ -128,12 +128,9 @@ void App::pickPhysicalDevice() {
         }
 
         // Check for extension support
-        std::vector<const char*> requiredDeviceExtensions{
-            vk::KHRSwapchainExtensionName
-        };
         auto availableDeviceExtensions    {physicalDevice.enumerateDeviceExtensionProperties()};
         bool supportsAllRequiredExtensions{true};
-        for (const char *requiredExtension : requiredDeviceExtensions) {
+        for (const char *requiredExtension : m_requiredDeviceExtensions) {
             bool supportsRequiredExtension{false};
             for (auto deviceExtension : availableDeviceExtensions) {
                 if (strcmp(deviceExtension.extensionName, requiredExtension) == 0) {
@@ -183,7 +180,7 @@ void App::pickPhysicalDevice() {
 }
 
 void App::createLogicalDevice() {
-    // grab first queue that supports graphics
+    // Grab first queue that supports graphics
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
     uint32_t graphicsQueueIndex{};
     bool foundGraphicsQueue{false};
@@ -198,6 +195,38 @@ void App::createLogicalDevice() {
     if (!foundGraphicsQueue) {
         throw std::runtime_error("Failed to find a queue that supports graphics");
     }
+
+    float queuePriority{1.0f};
+    vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
+        .queueFamilyIndex{graphicsQueueIndex},
+        .queueCount{1},
+        .pQueuePriorities{&queuePriority}
+    };
+
+    // Specify features & extensions we want enabled
+    vk::StructureChain<
+        vk::PhysicalDeviceFeatures2,
+        vk::PhysicalDeviceVulkan11Features,
+        vk::PhysicalDeviceVulkan13Features,
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        >
+        featureChain{
+            {},
+            {.shaderDrawParameters{true}},
+            {.dynamicRendering{true}},
+            {.extendedDynamicState{true}}
+        };
+    
+    // Create logical device
+    vk::DeviceCreateInfo deviceCreateInfo{
+        .pNext                  {&featureChain.get<vk::PhysicalDeviceFeatures2>()},
+        .queueCreateInfoCount   {1},
+        .pQueueCreateInfos      {&deviceQueueCreateInfo},
+        .enabledExtensionCount  {static_cast<uint32_t>(m_requiredDeviceExtensions.size())},
+        .ppEnabledExtensionNames{m_requiredDeviceExtensions.data()}
+    };
+    
+    m_device = vk::raii::Device(m_physicalDevice, deviceCreateInfo);
 }
 
 /* Render Loop */
