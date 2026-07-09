@@ -215,7 +215,7 @@ void App::createLogicalDeviceAndQueue() {
     featureChain{
         {},
         {.shaderDrawParameters{true}},
-        {.dynamicRendering{true}},
+        {.dynamicRendering    {true}},
         {.extendedDynamicState{true}}
     };
     
