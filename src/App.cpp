@@ -194,7 +194,7 @@ void App::pickPhysicalDevice() {
 }
 
 void App::createLogicalDeviceAndQueue() {
-    // Grab first queue family that supports graphics & presentation
+    // Grab index of first queue family that supports graphics & presentation
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
     uint32_t queueFamilyIndex                                    {0xFFFFFFFF};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
@@ -208,13 +208,6 @@ void App::createLogicalDeviceAndQueue() {
     if (queueFamilyIndex == 0xFFFFFFFF) {
         throw std::runtime_error("Failed to find a queue that supports graphics");
     }
-
-    float queuePriority{1.0f};
-    vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-        .queueFamilyIndex{queueFamilyIndex},
-        .queueCount      {1},
-        .pQueuePriorities{&queuePriority}
-    };
 
     // Specify features & extensions we want enabled
     vk::StructureChain<
@@ -231,6 +224,13 @@ void App::createLogicalDeviceAndQueue() {
     };
     
     // Create logical device
+    float queuePriority{1.0f};
+    vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
+        .queueFamilyIndex{queueFamilyIndex},
+        .queueCount      {1},
+        .pQueuePriorities{&queuePriority}
+    };
+
     vk::DeviceCreateInfo deviceCreateInfo{
         .pNext                  {&featureChain.get<vk::PhysicalDeviceFeatures2>()},
         .queueCreateInfoCount   {1},
