@@ -14,7 +14,7 @@ class App {
 
     private:
         GLFWwindow *m_window                     {nullptr};
-        vk::raii::Context m_context;
+        vk::raii::Context m_context              {};
         vk::raii::Instance m_instance            {nullptr};
         vk::raii::PhysicalDevice m_physicalDevice{nullptr};
         vk::raii::Device m_device                {nullptr};

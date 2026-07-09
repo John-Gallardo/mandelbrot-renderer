@@ -149,11 +149,13 @@ void App::pickPhysicalDevice() {
         }
 
         // Check for feature support
-        auto features{physicalDevice.template
-            getFeatures2<vk::PhysicalDeviceFeatures2,
-                        vk::PhysicalDeviceVulkan11Features,
-                        vk::PhysicalDeviceVulkan13Features,
-                        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
+        auto features{
+            physicalDevice.template getFeatures2<
+                vk::PhysicalDeviceFeatures2,
+                vk::PhysicalDeviceVulkan11Features,
+                vk::PhysicalDeviceVulkan13Features,
+                vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+            >()
         };
 
         bool supportsRequiredFeatures{
@@ -182,8 +184,8 @@ void App::pickPhysicalDevice() {
 void App::createLogicalDeviceAndQueue() {
     // Grab first queue family that supports graphics
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
-    uint32_t graphicsFamilyQueueIndex{};
-    bool foundGraphicsQueue{false};
+    uint32_t graphicsFamilyQueueIndex                           {};
+    bool foundGraphicsQueue                                     {false};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
         if (queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) {
             graphicsFamilyQueueIndex = i; 
@@ -199,7 +201,7 @@ void App::createLogicalDeviceAndQueue() {
     float queuePriority{1.0f};
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
         .queueFamilyIndex{graphicsFamilyQueueIndex},
-        .queueCount{1},
+        .queueCount      {1},
         .pQueuePriorities{&queuePriority}
     };
 
@@ -209,13 +211,13 @@ void App::createLogicalDeviceAndQueue() {
         vk::PhysicalDeviceVulkan11Features,
         vk::PhysicalDeviceVulkan13Features,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
-        >
-        featureChain{
-            {},
-            {.shaderDrawParameters{true}},
-            {.dynamicRendering{true}},
-            {.extendedDynamicState{true}}
-        };
+    >
+    featureChain{
+        {},
+        {.shaderDrawParameters{true}},
+        {.dynamicRendering{true}},
+        {.extendedDynamicState{true}}
+    };
     
     // Create logical device
     vk::DeviceCreateInfo deviceCreateInfo{
