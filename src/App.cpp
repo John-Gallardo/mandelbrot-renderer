@@ -5,6 +5,7 @@
 #include <queue>
 #include <utility>  // for std::pair
 #include <stdexcept>
+#include <vector>
 
 // Vulkan
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -17,6 +18,7 @@
 /********************
  * Public Functions *
  ********************/
+
 void App::run() {
     initWindow();
     initVulkan();
@@ -42,6 +44,7 @@ void App::initWindow() {
 /* Vulkan */
 void App::initVulkan() {
     createInstance();
+    createSurface();
     pickPhysicalDevice();
     createLogicalDeviceAndQueue();
 }
@@ -82,6 +85,15 @@ void App::createInstance() {
     };
 
     m_instance = vk::raii::Instance(m_context, createInfo);
+}
+
+void App::createSurface() {
+    // Create C-style VkSurface & pass into Vulkan RAII wrapper
+    VkSurfaceKHR surface;
+    if (glfwCreateWindowSurface(*m_instance, m_window, nullptr, &surface) != 0) {
+        throw std::runtime_error("Failed to create a window surface!");
+    }
+    m_surface = vk::raii::SurfaceKHR(m_instance, surface);
 }
 
 void App::pickPhysicalDevice() {

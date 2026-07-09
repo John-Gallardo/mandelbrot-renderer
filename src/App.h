@@ -16,6 +16,7 @@ class App {
         GLFWwindow *m_window                     {nullptr};
         vk::raii::Context m_context              {};
         vk::raii::Instance m_instance            {nullptr};
+        vk::raii::SurfaceKHR m_surface           {nullptr};
         vk::raii::PhysicalDevice m_physicalDevice{nullptr};
         vk::raii::Device m_device                {nullptr};
         vk::raii::Queue m_graphicsQueue          {nullptr};
@@ -31,6 +32,7 @@ class App {
 
         // Helper functions
         void createInstance();
+        void createSurface();
 
         /**
          * Picks a physical device, using a priority queue
