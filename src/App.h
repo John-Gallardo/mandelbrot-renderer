@@ -18,6 +18,7 @@ class App {
         vk::raii::Instance m_instance            {nullptr};
         vk::raii::PhysicalDevice m_physicalDevice{nullptr};
         vk::raii::Device m_device                {nullptr};
+        vk::raii::Queue m_graphicsQueue          {nullptr};
         std::vector<const char*> m_requiredDeviceExtensions{
             vk::KHRSwapchainExtensionName
         };
@@ -41,5 +42,5 @@ class App {
          */
         void pickPhysicalDevice();
         void processUserInput();
-        void createLogicalDevice();
+        void createLogicalDeviceAndQueue();
 };

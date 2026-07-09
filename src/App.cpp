@@ -43,7 +43,7 @@ void App::initWindow() {
 void App::initVulkan() {
     createInstance();
     pickPhysicalDevice();
-    createLogicalDevice();
+    createLogicalDeviceAndQueue();
 }
 
 void App::createInstance() {
@@ -179,14 +179,14 @@ void App::pickPhysicalDevice() {
     }
 }
 
-void App::createLogicalDevice() {
-    // Grab first queue that supports graphics
+void App::createLogicalDeviceAndQueue() {
+    // Grab first queue family that supports graphics
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
-    uint32_t graphicsQueueIndex{};
+    uint32_t graphicsFamilyQueueIndex{};
     bool foundGraphicsQueue{false};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
         if (queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) {
-            graphicsQueueIndex = i; 
+            graphicsFamilyQueueIndex = i; 
             foundGraphicsQueue = true;
             break;
         }
@@ -198,7 +198,7 @@ void App::createLogicalDevice() {
 
     float queuePriority{1.0f};
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-        .queueFamilyIndex{graphicsQueueIndex},
+        .queueFamilyIndex{graphicsFamilyQueueIndex},
         .queueCount{1},
         .pQueuePriorities{&queuePriority}
     };
@@ -227,6 +227,9 @@ void App::createLogicalDevice() {
     };
     
     m_device = vk::raii::Device(m_physicalDevice, deviceCreateInfo);
+
+    // Retrieve queue handle
+    m_graphicsQueue = vk::raii::Queue(m_device, graphicsFamilyQueueIndex, 0);
 }
 
 /* Render Loop */
