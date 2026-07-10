@@ -49,6 +49,7 @@ void App::initVulkan() {
     pickPhysicalDevice();
     createLogicalDeviceAndQueue();
     createSwapchain();
+    createImageViews();
 }
 
 void App::createInstance() {
@@ -283,6 +284,27 @@ void App::createSwapchain() {
 
     m_swapChain       = vk::raii::SwapchainKHR(m_device, swapChainCreateInfo);
     m_swapChainImages = m_swapChain.getImages();
+}
+
+void App::createImageViews() {
+    // These 3 are identical for the images
+    vk::ImageViewCreateInfo imageViewCreateInfo{
+        .viewType{vk::ImageViewType::e2D},
+        .format  {m_swapChainSurfaceFormat.format},
+        .subresourceRange{
+            .aspectMask    {vk::ImageAspectFlagBits::eColor},
+            .baseMipLevel  {0},
+            .levelCount    {1},
+            .baseArrayLayer{0},
+            .layerCount    {1}
+        }
+    };
+
+    // Create image views
+    for (const vk::Image &image : m_swapChainImages) {
+        imageViewCreateInfo.image = image;
+        swapChainImageViews.emplace_back(m_device, imageViewCreateInfo);
+    }
 }
 
 /* Render Loop */
