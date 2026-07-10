@@ -1,5 +1,6 @@
 #include "Config.h"
 #include "App.h"
+#include "SwapchainUtils.h"
 #include <ranges>
 #include <print>
 #include <queue>
@@ -107,7 +108,7 @@ void App::pickPhysicalDevice() {
         auto deviceProperties{physicalDevice.getProperties()};
         uint32_t score       {0};
 
-        // Rank based on GPU type. dGPUs are/should be better than iGPUs, which is the reason for the scoring
+        /* Rank based on GPU type. dGPUs are/should be better than iGPUs, which is the reason for the scoring */
         switch (deviceProperties.deviceType) {
             case vk::PhysicalDeviceType::eDiscreteGpu:
                 score += 1000;
@@ -119,13 +120,13 @@ void App::pickPhysicalDevice() {
                 continue;
         }
 
-        // Check if Vulkan 1.4 is supported
+        /* Check if Vulkan 1.4 is supported */
         bool supportsVulkan14{deviceProperties.apiVersion >= vk::ApiVersion14};
         if (!supportsVulkan14) {
             continue;
         }
         
-        // Check for graphics queue support
+        /* Check for graphics queue support */
         auto queueFamilies   {physicalDevice.getQueueFamilyProperties()};
         bool supportsGraphics{false};
         for (auto queueFamily : queueFamilies) {
@@ -139,11 +140,17 @@ void App::pickPhysicalDevice() {
             continue;
         }
 
-        // Check for extension support
-        auto availableDeviceExtensions    {physicalDevice.enumerateDeviceExtensionProperties()};
+        /* Check for extension support */
+        std::vector<vk::ExtensionProperties> availableDeviceExtensions{physicalDevice.enumerateDeviceExtensionProperties()};
+        // Query for needed swapchain capabilities
+        std::vector<vk::SurfaceCapabilitiesKHR> surfaceCapabilities   {physicalDevice.getSurfaceCapabilitiesKHR(*m_surface)};
+        std::vector<vk::SurfaceFormatKHR> availableFormats            {physicalDevice.getSurfaceFormatsKHR(m_surface)};
+        std::vector<vk::PresentModeKHR> availablePresentModes         {physicalDevice.getSurfacePresentModesKHR(m_surface)};
+
         bool supportsAllRequiredExtensions{true};
+
         for (const char *requiredExtension : m_requiredDeviceExtensions) {
-            bool supportsRequiredExtension{false};
+            bool supportsRequiredExtension                       {false};
             for (auto deviceExtension : availableDeviceExtensions) {
                 if (strcmp(deviceExtension.extensionName, requiredExtension) == 0) {
                     supportsRequiredExtension = true;
@@ -196,7 +203,7 @@ void App::pickPhysicalDevice() {
 void App::createLogicalDeviceAndQueue() {
     // Grab index of first queue family that supports graphics & presentation
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
-    uint32_t queueFamilyIndex                                    {0xFFFFFFFF};
+    uint32_t queueFamilyIndex                                   {0xFFFFFFFF};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
         if ((queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) &&
             m_physicalDevice.getSurfaceSupportKHR(i, *m_surface)) {
