@@ -142,15 +142,9 @@ void App::pickPhysicalDevice() {
 
         /* Check for extension support */
         std::vector<vk::ExtensionProperties> availableDeviceExtensions{physicalDevice.enumerateDeviceExtensionProperties()};
-        // Query for needed swapchain capabilities
-        std::vector<vk::SurfaceCapabilitiesKHR> surfaceCapabilities   {physicalDevice.getSurfaceCapabilitiesKHR(*m_surface)};
-        std::vector<vk::SurfaceFormatKHR> availableFormats            {physicalDevice.getSurfaceFormatsKHR(m_surface)};
-        std::vector<vk::PresentModeKHR> availablePresentModes         {physicalDevice.getSurfacePresentModesKHR(m_surface)};
-
-        bool supportsAllRequiredExtensions{true};
-
+        bool supportsAllRequiredExtensions                            {true};
         for (const char *requiredExtension : m_requiredDeviceExtensions) {
-            bool supportsRequiredExtension                       {false};
+            bool supportsRequiredExtension{false};
             for (auto deviceExtension : availableDeviceExtensions) {
                 if (strcmp(deviceExtension.extensionName, requiredExtension) == 0) {
                     supportsRequiredExtension = true;
@@ -167,7 +161,13 @@ void App::pickPhysicalDevice() {
             continue;
         }
 
-        // Check for feature support
+        /* Query for needed swapchain capabilities */
+        std::vector<vk::SurfaceFormatKHR> availableFormats   {physicalDevice.getSurfaceFormatsKHR(*m_surface)};
+        if (availableFormats.empty()) {
+            continue;
+        }
+
+        /* Check for feature support */
         auto features{
             physicalDevice.template getFeatures2<
                 vk::PhysicalDeviceFeatures2,
