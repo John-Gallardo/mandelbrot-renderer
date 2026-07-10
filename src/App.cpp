@@ -48,6 +48,7 @@ void App::initVulkan() {
     createSurface();
     pickPhysicalDevice();
     createLogicalDeviceAndQueue();
+    createSwapchain();
 }
 
 void App::createInstance() {
@@ -250,6 +251,38 @@ void App::createLogicalDeviceAndQueue() {
 
     // Retrieve queue handle
     m_graphicsQueue = vk::raii::Queue(m_device, queueFamilyIndex, 0);
+}
+
+void App::createSwapchain() {
+    // Query for needed swapchain information
+    vk::SurfaceCapabilitiesKHR surfaceCapabilities       {m_physicalDevice.getSurfaceCapabilitiesKHR(*m_surface)};
+    std::vector<vk::SurfaceFormatKHR> availableFormats   {m_physicalDevice.getSurfaceFormatsKHR(*m_surface)};
+    std::vector<vk::PresentModeKHR> availablePresentModes{m_physicalDevice.getSurfacePresentModesKHR(*m_surface)};
+
+    // Grab information needed
+    uint32_t minImageCount                 {SwapchainUtils::chooseSwapMinImageCount(surfaceCapabilities)};
+    vk::PresentModeKHR swapChainPresentMode{SwapchainUtils::chooseSwapPresentMode(availablePresentModes)};
+    m_swapChainExtent        = SwapchainUtils::chooseSwapExtent(surfaceCapabilities, m_window);
+    m_swapChainSurfaceFormat = SwapchainUtils::chooseSwapSurfaceFormat(availableFormats);
+
+    // Finally create swapchain
+    vk::SwapchainCreateInfoKHR swapChainCreateInfo{
+        .surface         {*m_surface},                                // the surface we use is the one we made
+        .minImageCount   {minImageCount},                             // self-explanatory
+        .imageFormat     {m_swapChainSurfaceFormat.format},           // 8-bit BGRA
+        .imageColorSpace {m_swapChainSurfaceFormat.colorSpace},       // SRGB
+        .imageExtent     {m_swapChainExtent},                         // window dimensions
+        .imageArrayLayers{1},                                         // only 1 layer for a mandelbrot renderer
+        .imageUsage      {vk::ImageUsageFlagBits::eColorAttachment},  // we render directly to the image
+        .imageSharingMode{vk::SharingMode::eExclusive},               // image is owned exclusively by the graphics queue family. probably doesn't matter though since only 1 queue is used
+        .preTransform    {surfaceCapabilities.currentTransform},      // we don't want any transformation applied
+        .compositeAlpha  {vk::CompositeAlphaFlagBitsKHR::eOpaque},    // ignore alpha channel, we don't want to blend with other apps
+        .presentMode     {swapChainPresentMode},                      // self-explanatory, I hard-coded it to be in FIFO (since it's guaranteed to be supported)
+        .clipped         {true}                                       // don't care about pixels covered by another app
+    };
+
+    m_swapChain       = vk::raii::SwapchainKHR(m_device, swapChainCreateInfo);
+    m_swapChainImages = m_swapChain.getImages();
 }
 
 /* Render Loop */

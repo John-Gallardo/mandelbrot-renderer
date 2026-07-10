@@ -13,13 +13,19 @@ class App {
         void run();
 
     private:
-        GLFWwindow *m_window                     {nullptr};
-        vk::raii::Context m_context              {};
-        vk::raii::Instance m_instance            {nullptr};
-        vk::raii::SurfaceKHR m_surface           {nullptr};
-        vk::raii::PhysicalDevice m_physicalDevice{nullptr};
-        vk::raii::Device m_device                {nullptr};
-        vk::raii::Queue m_graphicsQueue          {nullptr};
+        GLFWwindow *m_window                         {nullptr};
+        vk::raii::Context m_context                  {};
+        vk::raii::Instance m_instance                {nullptr};
+        vk::raii::SurfaceKHR m_surface               {nullptr};
+        vk::raii::PhysicalDevice m_physicalDevice    {nullptr};
+        vk::raii::Device m_device                    {nullptr};
+        vk::raii::Queue m_graphicsQueue              {nullptr};
+        // Swapchain Variables
+        vk::raii::SwapchainKHR m_swapChain           {nullptr};
+        std::vector<vk::Image> m_swapChainImages     {};
+        vk::SurfaceFormatKHR m_swapChainSurfaceFormat{};
+        vk::Extent2D m_swapChainExtent               {};
+        // Required
         std::vector<const char*> m_requiredDeviceExtensions{
             vk::KHRSwapchainExtensionName
         };
@@ -45,4 +51,5 @@ class App {
         void pickPhysicalDevice();
         void processUserInput();
         void createLogicalDeviceAndQueue();
+        void createSwapchain();
 };
