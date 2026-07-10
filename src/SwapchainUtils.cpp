@@ -49,4 +49,17 @@ namespace SwapchainUtils {
             std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
         };
     }
+
+    uint32_t chooseSwapMinImageCount(const vk::SurfaceCapabilitiesKHR &capabilities) {
+        // done because Khronos' official Vulkan tutorial uses this (go to swapchain section)
+        uint32_t minImageCount{std::max(3u, capabilities.minImageCount)};
+
+        // don't want to exceed maximum number of images
+        const bool noMaximum{0 == capabilities.maxImageCount};
+        if (!noMaximum && capabilities.maxImageCount < minImageCount) {
+            minImageCount = capabilities.maxImageCount;
+        }
+
+        return minImageCount;
+    }
 }
