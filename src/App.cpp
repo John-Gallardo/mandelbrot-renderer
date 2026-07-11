@@ -50,6 +50,7 @@ void App::initVulkan() {
     createLogicalDeviceAndQueue();
     createSwapchain();
     createImageViews();
+    createGraphicsPipeline();
 }
 
 void App::createInstance() {
@@ -307,6 +308,10 @@ void App::createImageViews() {
     }
 }
 
+void App::createGraphicsPipeline() {
+    
+}
+
 /* Render Loop */
 void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
@@ -323,5 +328,9 @@ void App::processUserInput() {
 
 /* Cleanup */
 void App::cleanup() {
-
+    // for some reason I get a segfault unless I specifically set this to nullptr.
+    // GDB's backtrace was showing my Nvidia driver's cleanup of this as the problem
+    m_swapChain = nullptr;  
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }

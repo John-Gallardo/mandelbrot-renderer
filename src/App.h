@@ -54,4 +54,5 @@ class App {
         void createLogicalDeviceAndQueue();
         void createSwapchain();
         void createImageViews();
+        void createGraphicsPipeline();
 };
