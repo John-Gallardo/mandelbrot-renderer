@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 
 // Vulkan
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -55,4 +56,6 @@ class App {
         void createSwapchain();
         void createImageViews();
         void createGraphicsPipeline();
+        vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const;
+        std::vector<char> readFile(const std::string &filename);
 };

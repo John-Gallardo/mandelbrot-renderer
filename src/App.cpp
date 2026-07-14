@@ -7,6 +7,7 @@
 #include <utility>  // for std::pair
 #include <stdexcept>
 #include <vector>
+#include <fstream>
 
 // Vulkan
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -309,7 +310,50 @@ void App::createImageViews() {
 }
 
 void App::createGraphicsPipeline() {
-    
+    // Create shader module
+    std::vector<char> shaderCode       {readFile("src/shaders/slang.spv")};
+    vk::raii::ShaderModule shaderModule{createShaderModule(shaderCode)};
+
+    // Create shader stages for vertex & fragment shader
+    vk::PipelineShaderStageCreateInfo vertShaderStageInfo{
+        .stage {vk::ShaderStageFlagBits::eVertex},
+        .module{shaderModule},
+        .pName {"vertMain"}
+    };
+
+    vk::PipelineShaderStageCreateInfo fragShaderStageInfo{
+        .stage {vk::ShaderStageFlagBits::eFragment},
+        .module{shaderModule},
+        .pName {"fragMain"}
+    };
+
+    constexpr int numShaderStages{2};
+    std::array<vk::PipelineShaderStageCreateInfo, numShaderStages> shaderStages{vertShaderStageInfo, fragShaderStageInfo};
+}
+
+std::vector<char> App::readFile(const std::string &filename) {
+    // start at end of file to get full file size
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Error: failed to open file");
+    }
+
+    // create buffer of the same size of the file & read from the beginning
+    std::vector<char> buffer(file.tellg());
+    file.seekg(0, std::ios::beg);
+    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    file.close();
+    return buffer;
+}
+
+vk::raii::ShaderModule App::createShaderModule(const std::vector<char> &code) const {
+    vk::ShaderModuleCreateInfo shaderModuleCreateInfo{
+        .codeSize{code.size() * sizeof(char)},
+        .pCode   {reinterpret_cast<const uint32_t*>(code.data())}
+    };
+    vk::raii::ShaderModule shaderModule{m_device, shaderModuleCreateInfo};
+    return shaderModule;
 }
 
 /* Render Loop */
