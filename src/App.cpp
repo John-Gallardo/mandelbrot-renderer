@@ -329,6 +329,74 @@ void App::createGraphicsPipeline() {
 
     constexpr int numShaderStages{2};
     std::array<vk::PipelineShaderStageCreateInfo, numShaderStages> shaderStages{vertShaderStageInfo, fragShaderStageInfo};
+
+    // Specify how vertex input is passed in (nothing since vertex shader is hardcoded for now)
+    vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+    // Specify how we are drawing our vertices
+    vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
+        .topology{vk::PrimitiveTopology::eTriangleList}
+    };
+
+    // Viewport & scissor test
+    vk::Viewport viewport{
+        .x       {0.0f},
+        .y       {0.0f},
+        .width   {static_cast<float>(m_swapChainExtent.width)},
+        .height  {static_cast<float>(m_swapChainExtent.height)},
+        .minDepth{0.0f},
+        .maxDepth{1.0f}
+    };
+
+    vk::Rect2D scissor{
+        .offset{0, 0},
+        .extent{m_swapChainExtent}
+    };
+
+    // Rasterizer
+    vk::PipelineRasterizationStateCreateInfo rasterizer{
+        .depthClampEnable       {vk::False},
+        .rasterizerDiscardEnable{vk::False},
+        .polygonMode            {vk::PolygonMode::eFill},
+        .cullMode               {vk::CullModeFlagBits::eBack},
+        .frontFace              {vk::FrontFace::eClockwise},
+        .depthBiasEnable        {vk::False},
+        .lineWidth              {1.0f}
+    };
+
+    // Multisampling
+    vk::PipelineMultisampleStateCreateInfo multisampling{
+        .rasterizationSamples{vk::SampleCountFlagBits::e1},
+        .sampleShadingEnable {vk::False}
+    };
+
+    // NOTE: don't have anything for depth & stencil testing right now
+
+    // Color blending
+    vk::PipelineColorBlendAttachmentState colorBlendAttachment{
+        .blendEnable   {vk::False},
+        .colorWriteMask{
+            vk::ColorComponentFlagBits::eR | 
+            vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB | 
+            vk::ColorComponentFlagBits::eA
+        }
+    };
+
+    vk::PipelineColorBlendStateCreateInfo colorBlending {
+        .logicOpEnable  {vk::False},
+        .logicOp        {vk::LogicOp::eCopy},
+        .attachmentCount{1},
+        .pAttachments   {&colorBlendAttachment}
+    };
+
+    // Pipeline layout
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+        .setLayoutCount        {0},
+        .pushConstantRangeCount{0}
+    };
+    
+    m_pipelineLayout = vk::raii::PipelineLayout(m_device, pipelineLayoutInfo);
 }
 
 std::vector<char> App::readFile(const std::string &filename) {
