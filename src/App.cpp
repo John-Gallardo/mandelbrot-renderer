@@ -428,6 +428,9 @@ void App::createGraphicsPipeline() {
         .pColorAttachmentFormats{&m_swapChainSurfaceFormat.format}
         }
     };
+
+    // finally create graphics pipeline
+    m_graphicsPipeline = vk::raii::Pipeline(m_device, nullptr, pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>());
 }
 
 std::vector<char> App::readFile(const std::string &filename) {

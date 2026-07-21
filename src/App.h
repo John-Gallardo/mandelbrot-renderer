@@ -22,6 +22,7 @@ class App {
         vk::raii::Device m_device                             {nullptr};
         vk::raii::Queue m_graphicsQueue                       {nullptr};
         vk::raii::PipelineLayout m_pipelineLayout             {nullptr};
+        vk::raii::Pipeline m_graphicsPipeline                 {nullptr};
         // Swapchain Variables
         vk::raii::SwapchainKHR m_swapChain                    {nullptr};
         std::vector<vk::Image> m_swapChainImages              {};
