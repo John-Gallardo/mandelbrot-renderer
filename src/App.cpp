@@ -405,13 +405,7 @@ void App::createGraphicsPipeline() {
     
     m_pipelineLayout = vk::raii::PipelineLayout(m_device, pipelineLayoutInfo);
 
-    // Dynamic Rendering
-    vk::PipelineRenderingCreateInfo{
-        .colorAttachmentCount   {1},
-        .pColorAttachmentFormats{&m_swapChainSurfaceFormat.format}
-    };
-
-    //
+    // Dynamic rendering & pipeline create info
     vk::StructureChain<
         vk::GraphicsPipelineCreateInfo,
         vk::PipelineRenderingCreateInfo
