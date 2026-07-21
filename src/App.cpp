@@ -353,6 +353,13 @@ void App::createGraphicsPipeline() {
         .extent{m_swapChainExtent}
     };
 
+    vk::PipelineViewportStateCreateInfo viewportState{
+        .viewportCount{1},
+        .pViewports   {&viewport},
+        .scissorCount {1},
+        .pScissors    {&scissor}
+    };
+
     // Rasterizer
     vk::PipelineRasterizationStateCreateInfo rasterizer{
         .depthClampEnable       {vk::False},
@@ -397,6 +404,36 @@ void App::createGraphicsPipeline() {
     };
     
     m_pipelineLayout = vk::raii::PipelineLayout(m_device, pipelineLayoutInfo);
+
+    // Dynamic Rendering
+    vk::PipelineRenderingCreateInfo{
+        .colorAttachmentCount   {1},
+        .pColorAttachmentFormats{&m_swapChainSurfaceFormat.format}
+    };
+
+    //
+    vk::StructureChain<
+        vk::GraphicsPipelineCreateInfo,
+        vk::PipelineRenderingCreateInfo
+    >
+    pipelineCreateInfoChain{
+        {.stageCount        {numShaderStages},
+        .pStages            {shaderStages.data()},
+        .pVertexInputState  {&vertexInputInfo},
+        .pInputAssemblyState{&inputAssembly},
+        .pViewportState     {&viewportState},
+        .pRasterizationState{&rasterizer},
+        .pMultisampleState  {&multisampling},
+        .pColorBlendState   {&colorBlending},
+        .pDynamicState      {nullptr},
+        .layout             {m_pipelineLayout},
+        .renderPass         {nullptr}
+        },
+
+        {.colorAttachmentCount{1},
+        .pColorAttachmentFormats{&m_swapChainSurfaceFormat.format}
+        }
+    };
 }
 
 std::vector<char> App::readFile(const std::string &filename) {
