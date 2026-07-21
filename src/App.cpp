@@ -305,7 +305,7 @@ void App::createImageViews() {
     // Create image views
     for (const vk::Image &image : m_swapChainImages) {
         imageViewCreateInfo.image = image;
-        swapChainImageViews.emplace_back(m_device, imageViewCreateInfo);
+        m_swapChainImageViews.emplace_back(m_device, imageViewCreateInfo);
     }
 }
 
