@@ -65,4 +65,14 @@ class App {
         std::vector<char> readFile(const std::string &filename);
         void createCommandPool();
         void createCommandBuffer();
+        void recordCommandBuffer(uint32_t imageIndex);
+        void transitionImageLayout(
+            uint32_t imageIndex,
+            vk::ImageLayout oldLayout,
+            vk::ImageLayout newLayout,
+            vk::AccessFlags2 srcAccessMask,
+            vk::AccessFlags2 dstAccessMask,
+            vk::PipelineStageFlags2 srcStageMask,
+            vk::PipelineStageFlags2 dstStageMask
+        );
 };

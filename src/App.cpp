@@ -479,6 +479,99 @@ void App::createCommandBuffer() {
     m_commandBuffer = std::move(vk::raii::CommandBuffers(m_device, commandBufferInfo).front());
 }
 
+void App::recordCommandBuffer(uint32_t imageIndex) {
+    m_commandBuffer.begin({});
+
+    // transition image for rendering
+    transitionImageLayout(
+        imageIndex,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::AccessFlagBits2::eNone,
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput
+    );
+
+    // set up color attachment
+    vk::ClearValue clearColor{vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)};
+    vk::RenderingAttachmentInfo attachmentInfo{
+        .imageView  {m_swapChainImageViews[imageIndex]},
+        .imageLayout{vk::ImageLayout::eColorAttachmentOptimal},
+        .loadOp     {vk::AttachmentLoadOp::eClear},
+        .storeOp    {vk::AttachmentStoreOp::eStore},
+        .clearValue {clearColor}
+    };
+    
+    // set up rendering info
+    vk::RenderingInfo renderingInfo{
+        .renderArea{
+            .offset{0, 0},
+            .extent{m_swapChainExtent}
+        },
+        .layerCount          {1},
+        .colorAttachmentCount{1},
+        .pColorAttachments   {&attachmentInfo}
+    };
+
+    // begin rendering
+    m_commandBuffer.beginRendering(renderingInfo);
+
+    m_commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
+    m_commandBuffer.draw(3, 1, 0, 0);
+
+    // end rendering
+    m_commandBuffer.endRendering();
+
+    // transition image to present layout
+    transitionImageLayout(
+        imageIndex,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::ePresentSrcKHR,
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::AccessFlagBits2::eNone,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eBottomOfPipe
+    );
+
+    m_commandBuffer.end();
+}
+
+void App::transitionImageLayout(
+    uint32_t imageIndex,
+    vk::ImageLayout oldLayout,
+    vk::ImageLayout newLayout,
+    vk::AccessFlags2 srcAccessMask,
+    vk::AccessFlags2 dstAccessMask,
+    vk::PipelineStageFlags2 srcStageMask,
+    vk::PipelineStageFlags2 dstStageMask
+) {
+    vk::ImageMemoryBarrier2 barrier{
+        .srcStageMask       {srcStageMask},
+        .srcAccessMask      {srcAccessMask},
+        .dstStageMask       {dstStageMask},
+        .oldLayout          {oldLayout},
+        .newLayout          {newLayout},
+        .srcQueueFamilyIndex{vk::QueueFamilyIgnored},
+        .dstQueueFamilyIndex{vk::QueueFamilyIgnored},
+        .image              {m_swapChainImages[imageIndex]},
+        .subresourceRange{
+            .aspectMask    {vk::ImageAspectFlagBits::eColor},
+            .baseMipLevel  {0},
+            .levelCount    {1},
+            .baseArrayLayer{0},
+            .layerCount    {1}
+        }
+    };
+
+    vk::DependencyInfo dependencyInfo{
+        .dependencyFlags        {},
+        .imageMemoryBarrierCount{1},
+        .pImageMemoryBarriers   {&barrier}
+    };
+
+    m_commandBuffer.pipelineBarrier2(dependencyInfo);
+}
 /* Render Loop */
 void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
