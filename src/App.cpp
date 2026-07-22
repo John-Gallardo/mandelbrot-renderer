@@ -53,6 +53,7 @@ void App::initVulkan() {
     createImageViews();
     createGraphicsPipeline();
     createCommandPool();
+    createCommandBuffer();
 }
 
 void App::createInstance() {
@@ -465,6 +466,17 @@ void App::createCommandPool() {
     };
 
     m_commandPool = vk::raii::CommandPool(m_device, commandPoolCreateInfo);
+}
+
+void App::createCommandBuffer() {
+    vk::CommandBufferAllocateInfo commandBufferInfo{
+        .commandPool       {m_commandPool},
+        .level             {vk::CommandBufferLevel::ePrimary},
+        .commandBufferCount{1}
+    };
+
+    // move bec. constructor returns a std::vector<> & we only want one
+    m_commandBuffer = std::move(vk::raii::CommandBuffers(m_device, commandBufferInfo).front());
 }
 
 /* Render Loop */

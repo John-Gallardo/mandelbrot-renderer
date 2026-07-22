@@ -25,6 +25,7 @@ class App {
         vk::raii::PipelineLayout m_pipelineLayout             {nullptr};
         vk::raii::Pipeline m_graphicsPipeline                 {nullptr};
         vk::raii::CommandPool m_commandPool                   {nullptr};
+        vk::raii::CommandBuffer m_commandBuffer               {nullptr};
         // Swapchain Variables
         vk::raii::SwapchainKHR m_swapChain                    {nullptr};
         std::vector<vk::Image> m_swapChainImages              {};
@@ -63,4 +64,5 @@ class App {
         vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const;
         std::vector<char> readFile(const std::string &filename);
         void createCommandPool();
+        void createCommandBuffer();
 };
