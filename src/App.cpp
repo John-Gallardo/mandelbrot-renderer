@@ -52,6 +52,7 @@ void App::initVulkan() {
     createSwapchain();
     createImageViews();
     createGraphicsPipeline();
+    createCommandPool();
 }
 
 void App::createInstance() {
@@ -207,16 +208,15 @@ void App::pickPhysicalDevice() {
 void App::createLogicalDeviceAndQueue() {
     // Grab index of first queue family that supports graphics & presentation
     std::vector<vk::QueueFamilyProperties> queueFamilyProperties{m_physicalDevice.getQueueFamilyProperties()};
-    uint32_t queueFamilyIndex                                   {0xFFFFFFFF};
     for (auto [i, queueFamilyProperty] : std::views::enumerate(queueFamilyProperties)) {
         if ((queueFamilyProperty.queueFlags & vk::QueueFlagBits::eGraphics) &&
             m_physicalDevice.getSurfaceSupportKHR(i, *m_surface)) {
-            queueFamilyIndex = i; 
+            m_graphicsQueueFamilyIndex = i; 
             break;
         }
     }
 
-    if (queueFamilyIndex == 0xFFFFFFFF) {
+    if (m_graphicsQueueFamilyIndex == 0xFFFFFFFF) {
         throw std::runtime_error("Failed to find a queue that supports graphics");
     }
 
@@ -237,7 +237,7 @@ void App::createLogicalDeviceAndQueue() {
     // Create logical device
     float queuePriority{1.0f};
     vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-        .queueFamilyIndex{queueFamilyIndex},
+        .queueFamilyIndex{m_graphicsQueueFamilyIndex},
         .queueCount      {1},
         .pQueuePriorities{&queuePriority}
     };
@@ -253,7 +253,7 @@ void App::createLogicalDeviceAndQueue() {
     m_device = vk::raii::Device(m_physicalDevice, deviceCreateInfo);
 
     // Retrieve queue handle
-    m_graphicsQueue = vk::raii::Queue(m_device, queueFamilyIndex, 0);
+    m_graphicsQueue = vk::raii::Queue(m_device, m_graphicsQueueFamilyIndex, 0);
 }
 
 void App::createSwapchain() {
@@ -456,6 +456,15 @@ vk::raii::ShaderModule App::createShaderModule(const std::vector<char> &code) co
     };
     vk::raii::ShaderModule shaderModule{m_device, shaderModuleCreateInfo};
     return shaderModule;
+}
+
+void App::createCommandPool() {
+    vk::CommandPoolCreateInfo commandPoolCreateInfo{
+        .flags{vk::CommandPoolCreateFlagBits::eResetCommandBuffer},
+        .queueFamilyIndex{m_graphicsQueueFamilyIndex}
+    };
+
+    m_commandPool = vk::raii::CommandPool(m_device, commandPoolCreateInfo);
 }
 
 /* Render Loop */

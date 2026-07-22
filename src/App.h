@@ -21,8 +21,10 @@ class App {
         vk::raii::PhysicalDevice m_physicalDevice             {nullptr};
         vk::raii::Device m_device                             {nullptr};
         vk::raii::Queue m_graphicsQueue                       {nullptr};
+        uint32_t m_graphicsQueueFamilyIndex                   {0xFFFFFFFF};  // note: this is a sentinel value
         vk::raii::PipelineLayout m_pipelineLayout             {nullptr};
         vk::raii::Pipeline m_graphicsPipeline                 {nullptr};
+        vk::raii::CommandPool m_commandPool                   {nullptr};
         // Swapchain Variables
         vk::raii::SwapchainKHR m_swapChain                    {nullptr};
         std::vector<vk::Image> m_swapChainImages              {};
@@ -60,4 +62,5 @@ class App {
         void createGraphicsPipeline();
         vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const;
         std::vector<char> readFile(const std::string &filename);
+        void createCommandPool();
 };
