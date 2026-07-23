@@ -186,7 +186,8 @@ void App::pickPhysicalDevice() {
 
         bool supportsRequiredFeatures{
             features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
-            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+            features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
+            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering && 
             features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
         };
 
@@ -231,8 +232,12 @@ void App::createLogicalDeviceAndQueue() {
     >
     featureChain{
         {},
+
         {.shaderDrawParameters{true}},
-        {.dynamicRendering    {true}},
+
+        {.synchronization2{true},
+        .dynamicRendering {true}},
+
         {.extendedDynamicState{true}}
     };
     
@@ -588,6 +593,8 @@ void App::mainLoop() {
         processUserInput();
         drawFrame();
     }
+
+    m_device.waitIdle();
 }
 
 void App::processUserInput() {
