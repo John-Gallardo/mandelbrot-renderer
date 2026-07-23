@@ -54,6 +54,7 @@ void App::initVulkan() {
     createGraphicsPipeline();
     createCommandPool();
     createCommandBuffer();
+    createSyncObjects();
 }
 
 void App::createInstance() {
@@ -577,13 +578,23 @@ void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         processUserInput();
+        drawFrame();
     }
 }
-
 void App::processUserInput() {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
     }
+}
+
+void App::drawFrame() {
+    
+}
+
+void App::createSyncObjects() {
+    m_presentCompleteSemaphore = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
+    m_renderFinishedSemaphore  = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
+    m_drawFence                = vk::raii::Fence(m_device, {.flags{vk::FenceCreateFlagBits::eSignaled}});
 }
 
 /* Cleanup */

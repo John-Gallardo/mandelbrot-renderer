@@ -26,6 +26,9 @@ class App {
         vk::raii::Pipeline m_graphicsPipeline                 {nullptr};
         vk::raii::CommandPool m_commandPool                   {nullptr};
         vk::raii::CommandBuffer m_commandBuffer               {nullptr};
+        vk::raii::Semaphore m_presentCompleteSemaphore        {nullptr};
+        vk::raii::Semaphore m_renderFinishedSemaphore         {nullptr};
+        vk::raii::Fence m_drawFence                           {nullptr};
         // Swapchain Variables
         vk::raii::SwapchainKHR m_swapChain                    {nullptr};
         std::vector<vk::Image> m_swapChainImages              {};
@@ -75,4 +78,6 @@ class App {
             vk::PipelineStageFlags2 srcStageMask,
             vk::PipelineStageFlags2 dstStageMask
         );
+        void createSyncObjects();
+        void drawFrame();
 };
