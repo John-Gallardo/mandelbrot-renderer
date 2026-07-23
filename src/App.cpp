@@ -606,9 +606,33 @@ void App::drawFrame() {
 
     // grab image & record command buffer for it
     auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphore, nullptr);
-    recordCommandBuffer(imageIndex)
-}
+    recordCommandBuffer(imageIndex);
 
+    // submit command buffer
+    vk::PipelineStageFlags waitDestinationStageMask{vk::PipelineStageFlagBits::eColorAttachmentOutput};
+    vk::SubmitInfo submitInfo{
+        .waitSemaphoreCount  {1},
+        .pWaitSemaphores     {&(*m_presentCompleteSemaphore)},
+        .pWaitDstStageMask   {&waitDestinationStageMask},
+        .commandBufferCount  {1},
+        .pCommandBuffers     {&(*m_commandBuffer)},
+        .signalSemaphoreCount{1},
+        .pSignalSemaphores   {&(*m_renderFinishedSemaphore)}
+    };
+    
+    m_graphicsQueue.submit(submitInfo, *m_drawFence);
+
+    // finally present image!
+    const vk::PresentInfoKHR presentInfo{
+        .waitSemaphoreCount{1},
+        .pWaitSemaphores   {&(*m_renderFinishedSemaphore)},
+        .swapchainCount    {1},
+        .pSwapchains       {&(*m_swapChain)},
+        .pImageIndices     {&imageIndex}
+    };
+
+    result = m_graphicsQueue.presentKHR(presentInfo);
+}
 
 /* Cleanup */
 void App::cleanup() {
