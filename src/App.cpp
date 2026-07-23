@@ -480,6 +480,12 @@ void App::createCommandBuffer() {
     m_commandBuffer = std::move(vk::raii::CommandBuffers(m_device, commandBufferInfo).front());
 }
 
+void App::createSyncObjects() {
+    m_presentCompleteSemaphore = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
+    m_renderFinishedSemaphore  = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
+    m_drawFence                = vk::raii::Fence(m_device, {.flags{vk::FenceCreateFlagBits::eSignaled}});
+}
+
 void App::recordCommandBuffer(uint32_t imageIndex) {
     m_commandBuffer.begin({});
 
@@ -551,6 +557,7 @@ void App::transitionImageLayout(
         .srcStageMask       {srcStageMask},
         .srcAccessMask      {srcAccessMask},
         .dstStageMask       {dstStageMask},
+        .dstAccessMask      {dstAccessMask},
         .oldLayout          {oldLayout},
         .newLayout          {newLayout},
         .srcQueueFamilyIndex{vk::QueueFamilyIgnored},
@@ -573,6 +580,7 @@ void App::transitionImageLayout(
 
     m_commandBuffer.pipelineBarrier2(dependencyInfo);
 }
+
 /* Render Loop */
 void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
@@ -581,6 +589,7 @@ void App::mainLoop() {
         drawFrame();
     }
 }
+
 void App::processUserInput() {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
@@ -588,14 +597,18 @@ void App::processUserInput() {
 }
 
 void App::drawFrame() {
-    
+    // wait on image
+    vk::Result fenceResult{m_device.waitForFences(*m_drawFence, vk::True, UINT64_MAX)};
+    if (fenceResult != vk::Result::eSuccess) {
+        throw std::runtime_error("Error: failed to wait for Vulkan fence");
+    }
+    m_device.resetFences(*m_drawFence);
+
+    // grab image & record command buffer for it
+    auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphore, nullptr);
+    recordCommandBuffer(imageIndex)
 }
 
-void App::createSyncObjects() {
-    m_presentCompleteSemaphore = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
-    m_renderFinishedSemaphore  = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
-    m_drawFence                = vk::raii::Fence(m_device, {.flags{vk::FenceCreateFlagBits::eSignaled}});
-}
 
 /* Cleanup */
 void App::cleanup() {
