@@ -14,27 +14,28 @@ class App {
         void run();
 
     private:
-        GLFWwindow *m_window                                  {nullptr};
-        vk::raii::Context m_context                           {};
-        vk::raii::Instance m_instance                         {nullptr};
-        vk::raii::SurfaceKHR m_surface                        {nullptr};
-        vk::raii::PhysicalDevice m_physicalDevice             {nullptr};
-        vk::raii::Device m_device                             {nullptr};
-        vk::raii::Queue m_graphicsQueue                       {nullptr};
-        uint32_t m_graphicsQueueFamilyIndex                   {0xFFFFFFFF};  // note: this is a sentinel value
-        vk::raii::PipelineLayout m_pipelineLayout             {nullptr};
-        vk::raii::Pipeline m_graphicsPipeline                 {nullptr};
-        vk::raii::CommandPool m_commandPool                   {nullptr};
-        vk::raii::CommandBuffer m_commandBuffer               {nullptr};
-        vk::raii::Semaphore m_presentCompleteSemaphore        {nullptr};
-        vk::raii::Semaphore m_renderFinishedSemaphore         {nullptr};
-        vk::raii::Fence m_drawFence                           {nullptr};
+        GLFWwindow *m_window                                        {nullptr};
+        vk::raii::Context m_context                                 {};
+        vk::raii::Instance m_instance                               {nullptr};
+        vk::raii::SurfaceKHR m_surface                              {nullptr};
+        vk::raii::PhysicalDevice m_physicalDevice                   {nullptr};
+        vk::raii::Device m_device                                   {nullptr};
+        vk::raii::Queue m_graphicsQueue                             {nullptr};
+        uint32_t m_graphicsQueueFamilyIndex                         {0xFFFFFFFF};  // note: this is a sentinel value
+        vk::raii::PipelineLayout m_pipelineLayout                   {nullptr};
+        vk::raii::Pipeline m_graphicsPipeline                       {nullptr};
+        vk::raii::CommandPool m_commandPool                         {nullptr};
+        std::vector<vk::raii::CommandBuffer> m_commandBuffers       {};
+        std::vector<vk::raii::Semaphore> m_presentCompleteSemaphores{};
+        std::vector<vk::raii::Semaphore> m_renderFinishedSemaphores {};
+        std::vector<vk::raii::Fence> m_drawFences                   {};
+        uint32_t m_frameIndex                                       {0};
         // Swapchain Variables
-        vk::raii::SwapchainKHR m_swapChain                    {nullptr};
-        std::vector<vk::Image> m_swapChainImages              {};
-        vk::SurfaceFormatKHR m_swapChainSurfaceFormat         {};
-        vk::Extent2D m_swapChainExtent                        {};
-        std::vector<vk::raii::ImageView> m_swapChainImageViews{};
+        vk::raii::SwapchainKHR m_swapChain                          {nullptr};
+        std::vector<vk::Image> m_swapChainImages                    {};
+        vk::SurfaceFormatKHR m_swapChainSurfaceFormat               {};
+        vk::Extent2D m_swapChainExtent                              {};
+        std::vector<vk::raii::ImageView> m_swapChainImageViews      {};
         // Required
         std::vector<const char*> m_requiredDeviceExtensions{
             vk::KHRSwapchainExtensionName
@@ -67,7 +68,7 @@ class App {
         vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const;
         std::vector<char> readFile(const std::string &filename);
         void createCommandPool();
-        void createCommandBuffer();
+        void createCommandBuffers();
         void recordCommandBuffer(uint32_t imageIndex);
         void transitionImageLayout(
             uint32_t imageIndex,

@@ -53,7 +53,7 @@ void App::initVulkan() {
     createImageViews();
     createGraphicsPipeline();
     createCommandPool();
-    createCommandBuffer();
+    createCommandBuffers();
     createSyncObjects();
 }
 
@@ -474,25 +474,30 @@ void App::createCommandPool() {
     m_commandPool = vk::raii::CommandPool(m_device, commandPoolCreateInfo);
 }
 
-void App::createCommandBuffer() {
+void App::createCommandBuffers() {
     vk::CommandBufferAllocateInfo commandBufferInfo{
         .commandPool       {m_commandPool},
         .level             {vk::CommandBufferLevel::ePrimary},
-        .commandBufferCount{1}
+        .commandBufferCount{Config::maxFramesInFlight}
     };
 
-    // move bec. constructor returns a std::vector<> & we only want one
-    m_commandBuffer = std::move(vk::raii::CommandBuffers(m_device, commandBufferInfo).front());
+    m_commandBuffers = vk::raii::CommandBuffers(m_device, commandBufferInfo);
 }
 
 void App::createSyncObjects() {
-    m_presentCompleteSemaphore = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
-    m_renderFinishedSemaphore  = vk::raii::Semaphore(m_device, vk::SemaphoreCreateInfo());
-    m_drawFence                = vk::raii::Fence(m_device, {.flags{vk::FenceCreateFlagBits::eSignaled}});
+    for ([[maybe_unused]] size_t i : std::views::iota(0uz, m_swapChainImages.size())) {
+        m_renderFinishedSemaphores.emplace_back(m_device, vk::SemaphoreCreateInfo());
+    }
+
+    for ([[maybe_unused]] size_t i : std::views::iota(0, Config::maxFramesInFlight)) {
+        m_presentCompleteSemaphores.emplace_back(m_device, vk::SemaphoreCreateInfo());
+        m_drawFences.emplace_back(m_device, vk::FenceCreateInfo{.flags{vk::FenceCreateFlagBits::eSignaled}});
+    }
 }
 
 void App::recordCommandBuffer(uint32_t imageIndex) {
-    m_commandBuffer.begin({});
+    auto &commandBuffer{m_commandBuffers[m_frameIndex]};
+    commandBuffer.begin({});
 
     // transition image for rendering
     transitionImageLayout(
@@ -527,13 +532,13 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
     };
 
     // begin rendering
-    m_commandBuffer.beginRendering(renderingInfo);
+    commandBuffer.beginRendering(renderingInfo);
 
-    m_commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
-    m_commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
+    commandBuffer.draw(3, 1, 0, 0);
 
     // end rendering
-    m_commandBuffer.endRendering();
+    commandBuffer.endRendering();
 
     // transition image to present layout
     transitionImageLayout(
@@ -546,7 +551,7 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
         vk::PipelineStageFlagBits2::eBottomOfPipe
     );
 
-    m_commandBuffer.end();
+    commandBuffer.end();
 }
 
 void App::transitionImageLayout(
@@ -583,7 +588,7 @@ void App::transitionImageLayout(
         .pImageMemoryBarriers   {&barrier}
     };
 
-    m_commandBuffer.pipelineBarrier2(dependencyInfo);
+    m_commandBuffers[m_frameIndex].pipelineBarrier2(dependencyInfo);
 }
 
 /* Render Loop */
@@ -605,40 +610,42 @@ void App::processUserInput() {
 
 void App::drawFrame() {
     // wait on image
-    vk::Result fenceResult{m_device.waitForFences(*m_drawFence, vk::True, UINT64_MAX)};
+    vk::Result fenceResult{m_device.waitForFences(*m_drawFences[m_frameIndex], vk::True, UINT64_MAX)};
     if (fenceResult != vk::Result::eSuccess) {
         throw std::runtime_error("Error: failed to wait for Vulkan fence");
     }
-    m_device.resetFences(*m_drawFence);
+    m_device.resetFences(*m_drawFences[m_frameIndex]);
 
     // grab image & record command buffer for it
-    auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphore, nullptr);
+    auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphores[m_frameIndex], nullptr);
     recordCommandBuffer(imageIndex);
 
     // submit command buffer
     vk::PipelineStageFlags waitDestinationStageMask{vk::PipelineStageFlagBits::eColorAttachmentOutput};
     vk::SubmitInfo submitInfo{
         .waitSemaphoreCount  {1},
-        .pWaitSemaphores     {&(*m_presentCompleteSemaphore)},
+        .pWaitSemaphores     {&(*m_presentCompleteSemaphores[m_frameIndex])},
         .pWaitDstStageMask   {&waitDestinationStageMask},
         .commandBufferCount  {1},
-        .pCommandBuffers     {&(*m_commandBuffer)},
+        .pCommandBuffers     {&(*m_commandBuffers[m_frameIndex])},
         .signalSemaphoreCount{1},
-        .pSignalSemaphores   {&(*m_renderFinishedSemaphore)}
+        .pSignalSemaphores   {&(*m_renderFinishedSemaphores[imageIndex])}
     };
     
-    m_graphicsQueue.submit(submitInfo, *m_drawFence);
+    m_graphicsQueue.submit(submitInfo, *m_drawFences[m_frameIndex]);
 
     // finally present image!
     const vk::PresentInfoKHR presentInfo{
         .waitSemaphoreCount{1},
-        .pWaitSemaphores   {&(*m_renderFinishedSemaphore)},
+        .pWaitSemaphores   {&(*m_renderFinishedSemaphores[imageIndex])},
         .swapchainCount    {1},
         .pSwapchains       {&(*m_swapChain)},
         .pImageIndices     {&imageIndex}
     };
 
     result = m_graphicsQueue.presentKHR(presentInfo);
+
+    m_frameIndex = (m_frameIndex + 1) % Config::maxFramesInFlight;
 }
 
 /* Cleanup */
