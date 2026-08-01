@@ -495,6 +495,23 @@ void App::createSyncObjects() {
     }
 }
 
+/* Render Loop */
+void App::mainLoop() {
+    while (!glfwWindowShouldClose(m_window)) {
+        glfwPollEvents();
+        processUserInput();
+        drawFrame();
+    }
+
+    m_device.waitIdle();
+}
+
+void App::processUserInput() {
+    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(m_window, true);
+    }
+}
+
 void App::recordCommandBuffer(uint32_t imageIndex) {
     auto &commandBuffer{m_commandBuffers[m_frameIndex]};
     commandBuffer.begin({});
@@ -589,23 +606,6 @@ void App::transitionImageLayout(
     };
 
     m_commandBuffers[m_frameIndex].pipelineBarrier2(dependencyInfo);
-}
-
-/* Render Loop */
-void App::mainLoop() {
-    while (!glfwWindowShouldClose(m_window)) {
-        glfwPollEvents();
-        processUserInput();
-        drawFrame();
-    }
-
-    m_device.waitIdle();
-}
-
-void App::processUserInput() {
-    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(m_window, true);
-    }
 }
 
 void App::drawFrame() {
