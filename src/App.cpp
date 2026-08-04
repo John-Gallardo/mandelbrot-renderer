@@ -609,18 +609,18 @@ void App::transitionImageLayout(
 }
 
 void App::drawFrame() {
-    // wait on image
+    // 1. Wait for rendering to be finished from previous queue submission to this image
     vk::Result fenceResult{m_device.waitForFences(*m_drawFences[m_frameIndex], vk::True, UINT64_MAX)};
     if (fenceResult != vk::Result::eSuccess) {
         throw std::runtime_error("Error: failed to wait for Vulkan fence");
     }
     m_device.resetFences(*m_drawFences[m_frameIndex]);
 
-    // grab image & record command buffer for it
+    // 2. Grab image & record command buffer for it
     auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphores[m_frameIndex], nullptr);
     recordCommandBuffer(imageIndex);
 
-    // submit command buffer
+    // 3. Submit command buffer
     vk::PipelineStageFlags waitDestinationStageMask{vk::PipelineStageFlagBits::eColorAttachmentOutput};
     vk::SubmitInfo submitInfo{
         .waitSemaphoreCount  {1},
@@ -634,7 +634,7 @@ void App::drawFrame() {
     
     m_graphicsQueue.submit(submitInfo, *m_drawFences[m_frameIndex]);
 
-    // finally present image!
+    // 4. Present image
     const vk::PresentInfoKHR presentInfo{
         .waitSemaphoreCount{1},
         .pWaitSemaphores   {&(*m_renderFinishedSemaphores[imageIndex])},
