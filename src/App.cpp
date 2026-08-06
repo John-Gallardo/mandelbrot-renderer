@@ -552,7 +552,7 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
     commandBuffer.beginRendering(renderingInfo);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
-    commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.draw(6, 1, 0, 0);
 
     // end rendering
     commandBuffer.endRendering();
