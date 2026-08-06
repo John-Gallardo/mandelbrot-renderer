@@ -34,6 +34,8 @@ void App::run() {
 
 /* Window */
 void App::initWindow() {
+    // NOTE: my version of renderdoc fails to create a GLFW surface with wayland. switching to this fixed it
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);  
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // we don't want to create an OpenGL context
     m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
