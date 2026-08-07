@@ -42,17 +42,25 @@ struct VertexOutput{
     float4 sv_position : SV_Position;
 };
 
+// coordinates in range [-1, 1]
+struct VertexPositionOutput{
+    float x, y;
+};
+
 [shader("vertex")]
-VertexOutput vertMain(uint vid : SV_VertexID) {
+VertexOutput vertMain(uint vid : SV_VertexID, out VertexPositionOutput VPO) {
     VertexOutput output;
     output.sv_position = float4(g_positions[vid], 0.0, 1.0);
+
+    VPO = {g_positions[vid].x, g_positions[vid].y};
+    
     return output;
 }
 
 [shader("fragment")]
-float4 fragMain(VertexOutput inVert) : SV_Target {
-    float real = inVert.sv_position.x, imaginary = -inVert.sv_position.y;  // NOTE: negative to flip, since negative y is up on Vulkan
-    float depth = calculateDepth(real, imaginary);
+float4 fragMain(in VertexPositionOutput VPO) : SV_Target {
+    float real = VPO.x, imaginary = VPO.y;
+    int depth = calculateDepth(real, imaginary);
     
     // color = white for convergence
     if (depth == g_maxIterations) 
