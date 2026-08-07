@@ -347,26 +347,17 @@ void App::createGraphicsPipeline() {
         .topology{vk::PrimitiveTopology::eTriangleList}
     };
 
+    // Dynamic State
+    std::vector<vk::DynamicState> dynamicStates{vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+    vk::PipelineDynamicStateCreateInfo dynamicState{
+        .dynamicStateCount{static_cast<uint32_t>(dynamicStates.size())},
+        .pDynamicStates   {dynamicStates.data()}
+    };
+
     // Viewport & scissor test
-    vk::Viewport viewport{
-        .x       {0.0f},
-        .y       {0.0f},
-        .width   {static_cast<float>(m_swapChainExtent.width)},
-        .height  {static_cast<float>(m_swapChainExtent.height)},
-        .minDepth{0.0f},
-        .maxDepth{1.0f}
-    };
-
-    vk::Rect2D scissor{
-        .offset{0, 0},
-        .extent{m_swapChainExtent}
-    };
-
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount{1},
-        .pViewports   {&viewport},
         .scissorCount {1},
-        .pScissors    {&scissor}
     };
 
     // Rasterizer
@@ -428,7 +419,7 @@ void App::createGraphicsPipeline() {
         .pRasterizationState{&rasterizer},
         .pMultisampleState  {&multisampling},
         .pColorBlendState   {&colorBlending},
-        .pDynamicState      {nullptr},
+        .pDynamicState      {&dynamicState},
         .layout             {m_pipelineLayout},
         .renderPass         {nullptr}
         },
@@ -552,6 +543,9 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
 
     // begin rendering
     commandBuffer.beginRendering(renderingInfo);
+    
+    commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(m_swapChainExtent.width), static_cast<float>(m_swapChainExtent.height), 0.0f, 1.0f));
+    commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_swapChainExtent));
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
     commandBuffer.draw(6, 1, 0, 0);
