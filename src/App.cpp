@@ -8,13 +8,7 @@
 #include <stdexcept>
 #include <vector>
 #include <fstream>
-
-// Vulkan
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
-
-// Windowing Library
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 /********************
@@ -37,12 +31,22 @@ void App::initWindow() {
     // NOTE: my version of renderdoc fails to create a GLFW surface with wayland. switching to this fixed it
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);  
     glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // we don't want to create an OpenGL context
-    m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // we don't want to create an OpenGL context
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+    m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, Config::appTitle.data(), nullptr, nullptr);
     if (m_window == nullptr) {
         throw std::runtime_error("Failed to create GLFW window");
     }
+
+    glfwSetWindowUserPointer(m_window, this);  // want to pass app to GLFW's callback function
+    glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
+}
+
+void App::framebufferResizeCallback(GLFWwindow *window, int width, int height) {
+    auto app{reinterpret_cast<App*>(glfwGetWindowUserPointer(window))};
+    app->m_framebufferResized = true;
 }
 
 /* Vulkan */
@@ -488,6 +492,26 @@ void App::createSyncObjects() {
     }
 }
 
+void App::recreateSwapchain() {
+    // edge case: potentially 0-sized framebuffer
+    int width{}, height{};
+    glfwGetFramebufferSize(m_window, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(m_window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    m_device.waitIdle();
+    cleanupSwapchain();
+    createSwapchain();
+    createImageViews();  // NOTE: image views created were for that particular swapchain
+}
+
+void App::cleanupSwapchain() {
+    m_swapChainImageViews.clear();
+    m_swapChain = nullptr;
+}
+
 /* Render Loop */
 void App::mainLoop() {
     while (!glfwWindowShouldClose(m_window)) {
@@ -610,10 +634,17 @@ void App::drawFrame() {
     if (fenceResult != vk::Result::eSuccess) {
         throw std::runtime_error("Error: failed to wait for Vulkan fence");
     }
-    m_device.resetFences(*m_drawFences[m_frameIndex]);
 
     // 2. Grab image & record command buffer for it
     auto [result, imageIndex] = m_swapChain.acquireNextImage(UINT64_MAX, *m_presentCompleteSemaphores[m_frameIndex], nullptr);
+    if (result == vk::Result::eErrorOutOfDateKHR || m_framebufferResized) {
+        m_framebufferResized = false;
+        recreateSwapchain();
+        return;
+    }
+
+    // NOTE: only reset if we are submitting work, to prevent a potential deadlock!
+    m_device.resetFences(*m_drawFences[m_frameIndex]);
     recordCommandBuffer(imageIndex);
 
     // 3. Submit command buffer
@@ -640,15 +671,17 @@ void App::drawFrame() {
     };
 
     result = m_graphicsQueue.presentKHR(presentInfo);
+    if (result == vk::Result::eErrorOutOfDateKHR || m_framebufferResized) {
+        m_framebufferResized = false;
+        recreateSwapchain();
+    }
 
     m_frameIndex = (m_frameIndex + 1) % Config::maxFramesInFlight;
 }
 
 /* Cleanup */
 void App::cleanup() {
-    // for some reason I get a segfault unless I specifically set this to nullptr.
-    // GDB's backtrace was showing my Nvidia driver's cleanup of this as the problem
-    m_swapChain = nullptr;  
+    cleanupSwapchain();
     glfwDestroyWindow(m_window);
     glfwTerminate();
 }

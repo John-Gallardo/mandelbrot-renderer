@@ -1,12 +1,6 @@
 #pragma once
 #include <fstream>
-
-// Vulkan
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
-
-// Windowing Library
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 class App {
@@ -29,6 +23,7 @@ class App {
         std::vector<vk::raii::Semaphore> m_presentCompleteSemaphores{};
         std::vector<vk::raii::Semaphore> m_renderFinishedSemaphores {};
         std::vector<vk::raii::Fence> m_drawFences                   {};
+        bool m_framebufferResized                                   {false};
         uint32_t m_frameIndex                                       {0};
         // Swapchain Variables
         vk::raii::SwapchainKHR m_swapChain                          {nullptr};
@@ -81,4 +76,7 @@ class App {
         );
         void createSyncObjects();
         void drawFrame();
+        void recreateSwapchain();
+        void cleanupSwapchain();
+        static void framebufferResizeCallback(GLFWwindow *window, int width, int height);  // NOTE: static because GLFW doesn't know how to call a member function
 };
