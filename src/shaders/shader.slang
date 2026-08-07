@@ -64,10 +64,10 @@ float4 fragMain(in VertexPositionOutput VPO) : SV_Target {
     float real = VPO.x, imaginary = -VPO.y;
     int depth = calculateDepth(real, imaginary);
     
-    // color = white for convergence
-    if (depth == g_maxIterations) 
-        return float4(1.0, 1.0, 1.0, 1.0);
-
-    float alpha = 1.0 / depth;
+    // Return white if converges
+    if (depth == g_maxIterations) return float4(1.0, 1.0, 1.0, 1.0);
+    
+    // else, we apply a green gradient
+    float alpha = depth / g_maxIterations;
     return float4(alpha * float3(0.0, 1.0, 0.5), 1.0);
 }
