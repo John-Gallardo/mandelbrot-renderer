@@ -15,7 +15,7 @@ static int g_divergenceBoundary = 2;
 
 int calculateDepth(float real, float imag) {
     // NOTE: set initially to z0's values
-    float realZn = 0, imagZn = 0;
+    float realZn = 0, imagZn = 0, oldRealZn = 0;
     int depth = 0;
 
     for (int i = 0; i < g_maxIterations; i++) {
@@ -23,8 +23,9 @@ int calculateDepth(float real, float imag) {
         
         // zn+1 = zn^2 + c = (-(imagZn^2) + realZn^2 + real) + i(2*realZn*imagZn + imag)
         // ^ derive using complex math
+        oldRealZn = realZn;  // need to cache or else imagZn is wrong!
         realZn = -(imagZn * imagZn) + realZn * realZn + real;
-        imagZn = 2*realZn*imagZn + imag;
+        imagZn = 2*oldRealZn*imagZn + imag;
         
         // 2. check for divergence
         float znDistance = sqrt(realZn * realZn + imagZn * imagZn);
