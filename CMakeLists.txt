@@ -17,3 +17,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Vulkan::Vulkan
     glfw)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    GLFW_INCLUDE_VULKAN
+    VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+    VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS)
