@@ -1,12 +1,6 @@
 #pragma once
 #include <cstdint>  // for uint32_t
-
-// Vulkan
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
-
-// Windowing Library
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace SwapchainUtils {
