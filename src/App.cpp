@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <vector>
 #include <fstream>
+#include <cmath>
 #include <vulkan/vulkan_raii.hpp>
 #include <GLFW/glfw3.h>
 
@@ -543,7 +544,7 @@ void App::processUserInput() {
     }
     
     // Offsets
-    const double moveSpeed{0.5 / m_zoom * m_deltaTime};
+    const double moveSpeed{Config::moveConstant / m_zoom * m_deltaTime};
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
         m_yOffset += moveSpeed;
     }
@@ -561,13 +562,12 @@ void App::processUserInput() {
     }
 
     // Zoom
-    double zoomFactor{0.5 * m_deltaTime};
     if (glfwGetKey(m_window, GLFW_KEY_EQUAL) == GLFW_PRESS) {
-        m_zoom += zoomFactor;
+        m_zoom *= std::pow(Config::zoomRate, m_deltaTime);
     }
 
     if (m_zoom > 0.1 && glfwGetKey(m_window, GLFW_KEY_MINUS) == GLFW_PRESS) {
-        m_zoom -= zoomFactor;
+        m_zoom /= std::pow(Config::zoomRate, m_deltaTime);
     }
 }
 
