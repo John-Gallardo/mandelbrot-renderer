@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "App.h"
 #include "SwapchainUtils.h"
+#include "PushConstants.h"
 #include <ranges>
 #include <print>
 #include <queue>
@@ -402,9 +403,16 @@ void App::createGraphicsPipeline() {
     };
 
     // Pipeline layout
+    vk::PushConstantRange pushConstantRange{
+        .stageFlags{vk::ShaderStageFlagBits::eFragment},
+        .offset    {0},
+        .size      {sizeof(CoordinateChanges)}
+    };
+
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
         .setLayoutCount        {0},
-        .pushConstantRangeCount{0}
+        .pushConstantRangeCount{1},
+        .pPushConstantRanges   {&pushConstantRange}
     };
     
     m_pipelineLayout = vk::raii::PipelineLayout(m_device, pipelineLayoutInfo);
@@ -570,6 +578,13 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
     
     commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(m_swapChainExtent.width), static_cast<float>(m_swapChainExtent.height), 0.0f, 1.0f));
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_swapChainExtent));
+
+    CoordinateChanges coordinateChanges{
+        .xOffset{0},
+        .yOffset{1},
+        .zoom   {1}
+    };
+    commandBuffer.pushConstants<CoordinateChanges>(*m_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, coordinateChanges);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
     commandBuffer.draw(6, 1, 0, 0);

@@ -10,6 +10,14 @@ static float2 g_positions[6] = float2[](
     float2(-1.0, 1.0)
 );
 
+// x & offset + zoom
+struct CoordinateChanges {
+    float xOffset, yOffset, zoom;
+}
+
+[[vk::push_constant]]
+ConstantBuffer<CoordinateChanges> coordinateChanges;
+
 static int g_maxIterations = 1000;
 static int g_divergenceBoundary = 2;
 
@@ -61,7 +69,7 @@ VertexOutput vertMain(uint vid : SV_VertexID, out VertexPositionOutput VPO) {
 [shader("fragment")]
 float4 fragMain(in VertexPositionOutput VPO) : SV_Target {
     // - for imaginary since it technically would be mirrored without
-    float real = VPO.x, imaginary = -VPO.y;
+    float real = (VPO.x + coordinateChanges.xOffset), imaginary = (-VPO.y + coordinateChanges.yOffset);
     int depth = calculateDepth(real, imaginary);
     
     // Return white if converges
