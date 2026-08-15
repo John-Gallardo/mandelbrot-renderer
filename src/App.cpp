@@ -614,9 +614,10 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_swapChainExtent));
 
     CoordinateChanges coordinateChanges{
-        .xOffset{m_xOffset},
-        .yOffset{m_yOffset},
-        .zoom   {m_zoom}
+        .xOffset    {m_xOffset},
+        .yOffset    {m_yOffset},
+        .zoom       {m_zoom},
+        .aspectRatio{static_cast<float>(m_swapChainExtent.width) / m_swapChainExtent.height}
     };
     commandBuffer.pushConstants<CoordinateChanges>(*m_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, coordinateChanges);
 

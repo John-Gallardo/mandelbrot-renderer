@@ -12,7 +12,7 @@ static float2 g_positions[6] = float2[](
 
 // x & offset + zoom
 struct CoordinateChanges {
-    float xOffset, yOffset, zoom;
+    float xOffset, yOffset, zoom, aspectRatio;
 }
 
 [[vk::push_constant]]
@@ -69,8 +69,9 @@ VertexOutput vertMain(uint vid : SV_VertexID, out VertexPositionOutput VPO) {
 [shader("fragment")]
 float4 fragMain(in VertexPositionOutput VPO) : SV_Target {
     // - for imaginary since it technically would be mirrored without
-    float xOffset = coordinateChanges.xOffset, yOffset = coordinateChanges.yOffset, zoom = coordinateChanges.zoom;
-    float real = (VPO.x / zoom) + xOffset, imaginary = (-VPO.y / zoom) + yOffset;
+    float xOffset = coordinateChanges.xOffset, yOffset = coordinateChanges.yOffset, zoom = coordinateChanges.zoom, aspectRatio = coordinateChanges.aspectRatio;
+    // note: only apply aspectRatio to real to scale. eg. 1920 x 1080 -> real / imaginary becomes 16/9
+    float real = (VPO.x * aspectRatio / zoom) + xOffset, imaginary = (-VPO.y / zoom) + yOffset;
     int depth = calculateDepth(real, imaginary);
     
     // Return white if converges
