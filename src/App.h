@@ -35,6 +35,12 @@ class App {
         std::vector<const char*> m_requiredDeviceExtensions{
             vk::KHRSwapchainExtensionName
         };
+        // Camera Movement
+        float m_xOffset                                             {0};
+        float m_yOffset                                             {0};
+        float m_zoom                                                {1};
+        double m_deltaTime                                          {0};
+        double m_lastFrame                                          {0};
 
         // Main functions
         void initWindow();

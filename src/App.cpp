@@ -526,14 +526,47 @@ void App::mainLoop() {
         glfwPollEvents();
         processUserInput();
         drawFrame();
+        
+        // Update delta time
+        double currFrame{glfwGetTime()};
+        m_deltaTime = currFrame - m_lastFrame;
+        m_lastFrame = currFrame;
     }
 
     m_device.waitIdle();
 }
 
 void App::processUserInput() {
+    // Escape button
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
+    }
+    
+    // Offsets
+    const double moveSpeed{0.1 / m_zoom * m_deltaTime};
+    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+        m_yOffset += moveSpeed;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
+        m_xOffset -= moveSpeed;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
+        m_yOffset -= moveSpeed;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+        m_xOffset += moveSpeed;
+    }
+
+    // Zoom
+    if (glfwGetKey(m_window, GLFW_KEY_EQUAL) == GLFW_PRESS) {
+        m_zoom += 1;
+    }
+
+    if (m_zoom > 1 && glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+        m_zoom -= 1;
     }
 }
 
@@ -580,9 +613,9 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_swapChainExtent));
 
     CoordinateChanges coordinateChanges{
-        .xOffset{0},
-        .yOffset{1},
-        .zoom   {1}
+        .xOffset{m_xOffset},
+        .yOffset{m_yOffset},
+        .zoom   {m_zoom}
     };
     commandBuffer.pushConstants<CoordinateChanges>(*m_pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, coordinateChanges);
 
