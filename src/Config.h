@@ -3,8 +3,8 @@
 #include <string_view>
 
 namespace Config{
-    inline constexpr uint32_t windowWidth     {1920};
-    inline constexpr uint32_t windowHeight    {1080};
+    inline constexpr uint32_t windowWidth     {1000};
+    inline constexpr uint32_t windowHeight    {1000};
     inline constexpr std::string_view appTitle{"Mandelbrot Renderer"};
     inline constexpr int maxFramesInFlight    {2};
 }
