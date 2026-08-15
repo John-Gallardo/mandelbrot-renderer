@@ -70,7 +70,7 @@ void App::createInstance() {
         .pApplicationName  {Config::appTitle.data()},
         .applicationVersion{VK_MAKE_VERSION(1, 0, 0)},
         .engineVersion     {VK_MAKE_VERSION(1, 0, 0)},
-        .apiVersion        {vk::ApiVersion14}
+        .apiVersion        {vk::ApiVersion13}
     };
 
     // Grab required instance extensions for GLFW
@@ -135,9 +135,9 @@ void App::pickPhysicalDevice() {
                 continue;
         }
 
-        /* Check if Vulkan 1.4 is supported */
-        bool supportsVulkan14{deviceProperties.apiVersion >= vk::ApiVersion14};
-        if (!supportsVulkan14) {
+        /* Check if Vulkan 1.3 is supported */
+        bool supportsVulkan13{deviceProperties.apiVersion >= vk::ApiVersion13};
+        if (!supportsVulkan13) {
             continue;
         }
         
@@ -186,17 +186,13 @@ void App::pickPhysicalDevice() {
         auto features{
             physicalDevice.template getFeatures2<
                 vk::PhysicalDeviceFeatures2,
-                vk::PhysicalDeviceVulkan11Features,
-                vk::PhysicalDeviceVulkan13Features,
-                vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                vk::PhysicalDeviceVulkan13Features
             >()
         };
 
         bool supportsRequiredFeatures{
-            features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
             features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
-            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering && 
-            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering 
         };
 
         if (!supportsRequiredFeatures) {
@@ -234,19 +230,12 @@ void App::createLogicalDeviceAndQueue() {
     // Specify features & extensions we want enabled
     vk::StructureChain<
         vk::PhysicalDeviceFeatures2,
-        vk::PhysicalDeviceVulkan11Features,
-        vk::PhysicalDeviceVulkan13Features,
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        vk::PhysicalDeviceVulkan13Features
     >
     featureChain{
         {},
-
-        {.shaderDrawParameters{true}},
-
         {.synchronization2{true},
-        .dynamicRendering {true}},
-
-        {.extendedDynamicState{true}}
+        .dynamicRendering {true}}
     };
     
     // Create logical device
