@@ -69,7 +69,8 @@ VertexOutput vertMain(uint vid : SV_VertexID, out VertexPositionOutput VPO) {
 [shader("fragment")]
 float4 fragMain(in VertexPositionOutput VPO) : SV_Target {
     // - for imaginary since it technically would be mirrored without
-    float real = (VPO.x + coordinateChanges.xOffset), imaginary = (-VPO.y + coordinateChanges.yOffset);
+    float xOffset = coordinateChanges.xOffset, yOffset = coordinateChanges.yOffset, zoom = coordinateChanges.zoom;
+    float real = (VPO.x / zoom) + xOffset, imaginary = (-VPO.y / zoom) + yOffset;
     int depth = calculateDepth(real, imaginary);
     
     // Return white if converges

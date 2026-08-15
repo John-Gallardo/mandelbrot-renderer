@@ -543,7 +543,7 @@ void App::processUserInput() {
     }
     
     // Offsets
-    const double moveSpeed{0.1 / m_zoom * m_deltaTime};
+    const double moveSpeed{0.5 / m_zoom * m_deltaTime};
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
         m_yOffset += moveSpeed;
     }
@@ -561,12 +561,13 @@ void App::processUserInput() {
     }
 
     // Zoom
+    double zoomFactor{0.5 * m_deltaTime};
     if (glfwGetKey(m_window, GLFW_KEY_EQUAL) == GLFW_PRESS) {
-        m_zoom += 1;
+        m_zoom += zoomFactor;
     }
 
-    if (m_zoom > 1 && glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
-        m_zoom -= 1;
+    if (m_zoom > 0.1 && glfwGetKey(m_window, GLFW_KEY_MINUS) == GLFW_PRESS) {
+        m_zoom -= zoomFactor;
     }
 }
 
