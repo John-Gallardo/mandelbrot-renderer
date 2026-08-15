@@ -56,7 +56,7 @@ class App {
          * Picks a physical device, using a priority queue
          * Criteria to be included:
          * 1. Must be a dGPU/iGPU
-         * 2. Must support Vulkan 1.4
+         * 2. Must support Vulkan 1.3
          * 3. Must support all required extensions
          * 4. Must support all required features
          */
