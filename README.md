@@ -1,12 +1,13 @@
 # Mandelbrot Renderer
-A Vulkan-based Mandelbrot renderer using the primitive graphics pipeline (vertex & fragment shaders). I use C++23, Vulkan-HPP's RAII bindings, GLFW for windowing, and Slang for the shaders. Note that only Linux was tested.
+A Vulkan-based Mandelbrot renderer using vertex & fragment shaders. I use C++23, Vulkan-HPP's RAII bindings, GLFW for windowing, and Slang for the shaders. Note that I only tested Linux when working with the project.
 
 # Features
-- Movement using WASD, and zooming using + and -
+- Movement up, left, down, and right, respectively, using WASD
+- Zooming using + and -
 - Window resizing and automatic aspect ratio correction
   
 # Video Demo
-- TODO
+[![Mandelbrot Renderer Demo](https://img.youtube.com/vi/JjSNTpR_psc/maxresdefault.jpg)](https://youtu.be/JjSNTpR_psc)
 
 # Build Instructions
 1. Vulkan, GLFW, and a compiler supporting C++23 are required to be installed
