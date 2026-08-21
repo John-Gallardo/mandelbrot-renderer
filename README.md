@@ -10,7 +10,7 @@ A Vulkan-based Mandelbrot renderer using vertex & fragment shaders. I use C++23,
 [![Mandelbrot Renderer Demo](https://img.youtube.com/vi/JjSNTpR_psc/maxresdefault.jpg)](https://youtu.be/JjSNTpR_psc)
 
 # Build Instructions
-1. Vulkan, GLFW, and a compiler supporting C++23 are required to be installed
+1. Vulkan 1.3 and swapchain support, GLFW, and a compiler supporting C++23 are required to be installed
 2. Go to the root directory & run:
 ```
 cmake -Bbuild && cmake --build build && ./build/main
